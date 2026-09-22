@@ -1,57 +1,70 @@
-# COBISS Puzzle Backend
+# IZUM Cobiss Plus Puzzle Backend
 
-Drop-in replacement for the IZUM CPlus backend used by the puzzle game frontend.
-
-Implements the same REST contract on port **8080**, so the existing Next.js proxy routes work without changes.
-
-## Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/cobiss/api/si/sl/search/cobib?q={query}&prf=cobiss ela&max=500` | Search books |
-| GET | `/cobiss/api/si/sl/search/cobib/display/{id}` | Get book details |
+Spring Boot backend for the puzzle game that simulates the REST contract of the existing IZUM Cobiss Plus backend. It uses local mock data by default, so the project can be run without access to the external COBISS API.
 
 ## Requirements
 
-- Java 21+
-- Maven 3.9+
+- Java 21 or newer
+- Maven 3.9 or newer
 
 ## Run
 
+From the project root, run:
+
 ```bash
-cd cobiss-puzzle-backend
 mvn spring-boot:run
 ```
 
-The server starts at `http://localhost:8080`.
+The server is available at `http://localhost:8080`.
 
-## Run with frontend
+## API
 
-Terminal 1 — backend:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/cobiss/api/si/sl/search/cobib?q={query}&prf={profile}&max={count}` | Search books |
+| GET | `/cobiss/api/si/sl/search/cobib/display/{id}` | Get book details |
+
+Examples:
 
 ```bash
-cd cobiss-puzzle-backend
-mvn spring-boot:run
+curl "http://localhost:8080/cobiss/api/si/sl/search/cobib?q=tolkien&max=10"
+curl "http://localhost:8080/cobiss/api/si/sl/search/cobib/display/1"
 ```
 
-Terminal 2 — frontend:
+The `prf` parameter is optional, and `max` defaults to `500`.
+
+## Mock and COBISS modes
+
+The default configuration in `src/main/resources/application.properties` is:
+
+```properties
+cobiss.mock=true
+```
+
+Mock mode searches the built-in sample books. To use COBISS Plus, set:
+
+```properties
+cobiss.mock=false
+```
+
+The configured URLs for the external source are `cobiss.api-base-url` and `cobiss.record-base-url`. When connecting to a live source, verify that they match the available API and its terms of use.
+
+## Tests
+
+Run the tests with:
 
 ```bash
-cd izum-puzzle-produkcija/puzzle-game
+mvn test
+```
+
+## Run with the frontend
+
+Run the backend in one terminal and the frontend in another:
+
+```bash
+cd ../izum-puzzle-produkcija/puzzle-game
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and search for books like `harry`, `tolkien`, or `orwell`.
-
-## Mock data
-
-The service ships with 8 sample books in `BookSearchService`. Replace this with a real COBISS data source when available.
-
-Cover URLs currently use the `d.cobiss.net` domain so they match the frontend `next.config.ts` image allowlist. Replace them with real COBISS cover URLs when you connect to live data.
-
-## Next steps
-
-1. Replace `BookSearchService` mock list with a database or COBISS integration
-2. Add caching for search results
-3. Contact IZUM (`podpora@izum.si`) if you need access to the real CobissPlus-API / CLib services
+The frontend is then available at `http://localhost:3000`.
